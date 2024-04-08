@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "Magni",
+  "description": "Secure Solana crypto wallet",
+  "version": "1.0.0",
+  "permissions": [
+    "activeTab",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_popup": "index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ]
+}
