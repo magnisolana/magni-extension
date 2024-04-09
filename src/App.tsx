@@ -8,9 +8,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import LanguageIcon from "@mui/icons-material/Language";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import * as web3 from "@solana/web3.js";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import * as bs58 from "bs58";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import "./App.css";
@@ -91,15 +89,13 @@ function App() {
 
     try {
       if (tx58) {
-        const swapTransactionBuf = bs58.decode(tx58);
-        const transaction =
-          web3.VersionedTransaction.deserialize(swapTransactionBuf);
+        // const swapTransactionBuf = bs58.decode(tx58);
+        // const transaction =
+        //   web3.VersionedTransaction.deserialize(swapTransactionBuf);
+        //
+        // setTransaction(JSON.stringify(transaction));
 
-        console.log(transaction);
-
-        setTransaction(JSON.stringify(transaction));
-
-        // setTransaction(`solana:${tx58}`);
+        setTransaction(`solana:${tx58}`);
       }
     } catch (e) {
       console.log(e);
@@ -210,8 +206,8 @@ function App() {
               Sign a transaction using your phone.{" "}
               <span className={"text-sm"}>
                 {!scan
-                  ? `Scan this QR-code via your wallet-phone to sign transaction.`
-                  : `Scan QR-code from your wallet-phone via web-camera to send transaction.`}
+                  ? `Scan this QR-code via your wallet-phone to sign the transaction.`
+                  : `Scan QR-code from your wallet-phone via web-camera to send the transaction.`}
               </span>
             </h2>
             <div
@@ -222,7 +218,7 @@ function App() {
               }}
             >
               {!scan ? (
-                <QRCode value={transaction} size={200} />
+                <QRCode value={transaction} size={300} />
               ) : (
                 <Scanner
                   onResult={(text, result) => {
@@ -236,8 +232,8 @@ function App() {
                   onError={(error) => console.log(error?.message)}
                   styles={{
                     container: {
-                      width: 200,
-                      height: 200,
+                      width: 300,
+                      height: 300,
                     },
                     finderBorder: 10,
                   }}

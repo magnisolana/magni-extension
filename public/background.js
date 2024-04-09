@@ -38,7 +38,7 @@ chrome?.runtime?.onMessage?.addListener((message) => {
           top: message.top,
           left: message.left,
           type: "popup",
-          width: 320,
+          width: 420,
           height: 600,
         });
       }
