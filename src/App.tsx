@@ -264,6 +264,14 @@ function App() {
                       .then(() => setSending(false))
                       .catch((e) => {
                         console.log(e);
+
+                        toast({
+                          variant: "destructive",
+                          title: "Failed to sign transaction.",
+                          description:
+                            "Please make sure your QR code is valid and you have coins on your balance.",
+                        });
+
                         setSending(null);
                       });
                   }}
