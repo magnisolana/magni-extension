@@ -6,6 +6,7 @@ import { shortenAddress } from "@/lib/utils";
 import CropFreeIcon from "@mui/icons-material/CropFree";
 import DoneIcon from "@mui/icons-material/Done";
 import LanguageIcon from "@mui/icons-material/Language";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import * as web3 from "@solana/web3.js";
@@ -31,6 +32,7 @@ function App() {
   const [scan, setScan] = useState(false);
 
   const [transaction, setTransaction] = useState<string>("");
+  const [txId, setTxId] = useState<string>("");
 
   const { toast } = useToast();
 
@@ -127,6 +129,8 @@ function App() {
     const txId = await connection.sendTransaction(tx);
 
     console.log(`txId: ${txId}`);
+
+    setTxId(txId);
   };
 
   useEffect(() => {
@@ -330,7 +334,15 @@ function App() {
                   <DoneIcon className={"text-xl text-green-500"} />
                 </div>
               </div>
-              <div className={"flex flex-col items-center mt-3"}>
+              <div className={"flex items-center mt-3"}>
+                <Button
+                  variant={"secondary"}
+                  className={"flex items-center mr-2"}
+                  onClick={() => window.open(`https://solscan.io/tx/${txId}`)}
+                >
+                  <OpenInNewIcon />
+                  Show on Solscan
+                </Button>
                 <Button
                   className={"flex items-center"}
                   onClick={() => window.close()}
