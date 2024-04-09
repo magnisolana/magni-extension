@@ -33,8 +33,13 @@ chrome?.runtime?.onMessage?.addListener((message) => {
   switch (message.type) {
     case "sign_transaction_bg":
       {
+        console.log("====================================================");
+        console.log(message.tx);
+
         chrome.windows.create({
-          url: chrome.runtime.getURL(`index.html?tx=${message.tx}`),
+          url: chrome.runtime.getURL(
+            `index.html?tx=${message.tx}&address=${message.address}`,
+          ),
           top: message.top,
           left: message.left,
           type: "popup",

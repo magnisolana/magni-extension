@@ -8,9 +8,14 @@ import DoneIcon from "@mui/icons-material/Done";
 import LanguageIcon from "@mui/icons-material/Language";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import * as web3 from "@solana/web3.js";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import * as bip39 from "bip39";
+import * as bs58 from "bs58";
+import { derivePath } from "ed25519-hd-key";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
+import nacl from "tweetnacl";
 import "./App.css";
 
 function App() {
@@ -84,21 +89,55 @@ function App() {
     });
   };
 
+  const getPrivateKey = async (phrase: string) => {
+    const seed = await bip39.mnemonicToSeed(phrase);
+    const seedBuffer = Buffer.from(seed).toString("hex");
+    const path44Change = `m/44'/501'/0'/0'`;
+    const derivedSeed = derivePath(path44Change, seedBuffer).key;
+
+    return new web3.Account(nacl.sign.keyPair.fromSeed(derivedSeed).secretKey);
+  };
+
+  const signAndPublish = async (_sign: string) => {
+    const privateKey = await getPrivateKey(
+      "style danger object elegant pass miss certain diary give anchor kidney sport",
+    );
+
+    console.log(privateKey);
+
+    const connection = new web3.Connection(
+      "https://svc.blockdaemon.com/solana/mainnet/native?apiKey=mTWZ46f2YRFkCbSA3AwIRpCoksF2K81zjEVdaZHLsFBv50Uu",
+      { commitment: "confirmed" },
+    );
+
+    const swapTransactionBuf = bs58.decode(transaction.replace("solana:", ""));
+    const tx = web3.VersionedTransaction.deserialize(swapTransactionBuf);
+
+    console.log(tx);
+
+    // tx.addSignature(
+    //   new PublicKey(address),
+    //   bs58.decode(
+    //     "3Q4ZuTgi4Hj8DJ8YAwY4Z1VKiZH2VfavLMELzkepwxzXUwYmbkDRG4X1jbBuNXJjoiFrdmG2hwhu8wHN7zUeLvvh",
+    //   ),
+    // );
+
+    tx.sign([privateKey]);
+
+    const txId = await connection.sendTransaction(tx);
+
+    console.log(`txId: ${txId}`);
+  };
+
   useEffect(() => {
     const tx58 = new URLSearchParams(location.search).get("tx");
 
-    try {
-      if (tx58) {
-        // const swapTransactionBuf = bs58.decode(tx58);
-        // const transaction =
-        //   web3.VersionedTransaction.deserialize(swapTransactionBuf);
-        //
-        // setTransaction(JSON.stringify(transaction));
+    if (tx58) {
+      const address = new URLSearchParams(location.search).get("address");
 
-        setTransaction(`solana:${tx58}`);
-      }
-    } catch (e) {
-      console.log(e);
+      setAddress(address || "");
+
+      setTransaction(`solana:${tx58}`);
     }
 
     if (!chrome) {
@@ -118,10 +157,6 @@ function App() {
             setLogged(true);
           }
 
-          break;
-        }
-        case "sign_transaction": {
-          console.log(message);
           break;
         }
       }
@@ -225,9 +260,12 @@ function App() {
                     console.log(text, result);
 
                     setSending(true);
-                    setTimeout(() => {
-                      setSending(false);
-                    }, 3000);
+                    signAndPublish(text)
+                      .then(() => setSending(false))
+                      .catch((e) => {
+                        console.log(e);
+                        setSending(null);
+                      });
                   }}
                   onError={(error) => console.log(error?.message)}
                   styles={{

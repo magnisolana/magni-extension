@@ -48,6 +48,7 @@ const onLoad = () => {
 
         chrome.runtime.sendMessage({
           type: "sign_transaction_bg",
+          address: storedAddress,
           tx,
         });
       }
