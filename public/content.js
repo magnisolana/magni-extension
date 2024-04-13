@@ -1,4 +1,9 @@
-let isSolflareRequested = false;
+const state = {
+  hostname: window.location.hostname,
+  isSolflareRequested: false,
+  storedAddress: localStorage.getItem("last-wallet-address"),
+  clearOnAuth: localStorage.getItem("clearOnAuth") === "true",
+};
 
 const commands = {
   connect: (address) => ({
@@ -34,12 +39,8 @@ const commands = {
   },
 };
 
-const storedAddress = localStorage.getItem("last-wallet-address");
-
-const hostname = window.location.hostname;
-
 const onLoad = () => {
-  if (hostname === "connect.solflare.com") {
+  if (state.hostname === "connect.solflare.com") {
     window.addEventListener("message", (message) => {
       const { data } = message;
 
@@ -48,7 +49,7 @@ const onLoad = () => {
 
         chrome.runtime.sendMessage({
           type: "sign_transaction_bg",
-          address: storedAddress,
+          address: state.storedAddress,
           tx,
         });
       }
@@ -57,11 +58,18 @@ const onLoad = () => {
     return;
   }
 
-  if (storedAddress) {
+  if (state.storedAddress) {
     const interval = setInterval(() => {
-      if (isSolflareRequested) {
+      if (state.isSolflareRequested) {
         window.postMessage(commands.collapse);
-        window.postMessage(commands.connect(storedAddress));
+        window.postMessage(commands.connect(state.storedAddress));
+
+        if (state.clearOnAuth) {
+          localStorage.removeItem("clearOnAuth");
+          localStorage.removeItem("last-wallet-address");
+          localStorage.removeItem("walletName");
+          localStorage.removeItem("solflarePreferredWalletAdapter");
+        }
 
         clearInterval(interval);
       }
@@ -69,7 +77,11 @@ const onLoad = () => {
   }
 };
 
-const connect = (address) => {
+const connect = (address, loginAutomatically) => {
+  if (!loginAutomatically) {
+    localStorage.setItem("clearOnAuth", "true");
+  }
+
   localStorage.setItem("walletName", `"Solflare"`);
   localStorage.setItem("solflarePreferredWalletAdapter", "extension");
 
@@ -86,17 +98,17 @@ const disconnect = () => {
   localStorage.removeItem("solflarePreferredWalletAdapter");
 };
 
-if (hostname !== "connect.solflare.com") {
+if (state.hostname !== "connect.solflare.com") {
   chrome.runtime.onMessage.addListener((message) => {
     switch (message.type) {
       case "network": {
-        isSolflareRequested = true;
+        state.isSolflareRequested = true;
 
         console.log(message);
         break;
       }
       case "connect": {
-        connect(message.address);
+        connect(message.address, message.loginAutomatically);
         break;
       }
       case "disconnect": {
@@ -106,8 +118,11 @@ if (hostname !== "connect.solflare.com") {
       case "login_status": {
         chrome.runtime.sendMessage({
           type: "login_status",
-          status: isSolflareRequested,
-          address: isSolflareRequested && storedAddress ? storedAddress : null,
+          status: state.isSolflareRequested,
+          address:
+            state.isSolflareRequested && state.storedAddress
+              ? state.storedAddress
+              : null,
         });
         break;
       }
